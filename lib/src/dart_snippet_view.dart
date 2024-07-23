@@ -1,6 +1,6 @@
 import 'package:dart_style/dart_style.dart';
 import 'package:flutter/widgets.dart';
-import 'package:webviewx/webviewx.dart';
+import 'package:webviewx2/webviewx2.dart';
 
 class DartSnippetView extends StatefulWidget {
   final double height;
