@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter/services.dart';
 import 'package:dart_style/dart_style.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class DartSnippetView extends StatefulWidget {
   final String code;
@@ -21,17 +22,31 @@ class DartSnippetView extends StatefulWidget {
 }
 
 class _DartSnippetViewState extends State<DartSnippetView> {
-  late InAppWebViewController _webViewController;
   String? code;
+
+  late WebViewController controller;
 
   @override
   void initState() {
     super.initState();
+    initController();
     if (widget.runFormatter) {
       code = DartFormatter().format(widget.code);
     } else {
       code = widget.code;
     }
+    loadResource();
+  }
+
+  void initController() {
+    controller = WebViewController();
+  }
+
+  void loadResource() {
+    rootBundle.loadString('packages/dart_snippet_view/assets/code_viewer.html')
+        .then((a) {
+      controller.loadHtmlString(a.replaceAll('{{CODE}}', code ?? ''));
+    });
   }
 
   @override
@@ -39,23 +54,9 @@ class _DartSnippetViewState extends State<DartSnippetView> {
     return SizedBox(
       height: widget.height,
       width: widget.width,
-      child: InAppWebView(
-        initialFile: "packages/dart_snippet_view/assets/code_viewer.html",
-        initialSettings: InAppWebViewSettings(javaScriptEnabled: true),
-        onWebViewCreated: (InAppWebViewController controller) {
-          _webViewController = controller;
-        },
-        onLoadStop: (InAppWebViewController controller, Uri? url) {
-          _updateCodeContent();
-        },
+      child: WebViewWidget(
+        controller: controller,
       ),
     );
-  }
-
-  void _updateCodeContent() {
-    if (code != null) {
-      _webViewController.evaluateJavascript(
-          source: "updateCodeContent('${code!.replaceAll("'", "\\'")}');");
-    }
   }
 }
