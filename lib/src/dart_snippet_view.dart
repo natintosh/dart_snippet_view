@@ -1,6 +1,6 @@
-import 'package:dart_style/dart_style.dart';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:dart_style/dart_style.dart';
 
 class DartSnippetView extends StatefulWidget {
   final String code;
@@ -21,7 +21,7 @@ class DartSnippetView extends StatefulWidget {
 }
 
 class _DartSnippetViewState extends State<DartSnippetView> {
-  late WebViewController _controller;
+  late InAppWebViewController _webViewController;
   String? code;
 
   @override
@@ -32,23 +32,6 @@ class _DartSnippetViewState extends State<DartSnippetView> {
     } else {
       code = widget.code;
     }
-
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadFlutterAsset('packages/dart_snippet_view/assets/code_viewer.html')
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageFinished: (String url) {
-            _updateCodeContent();
-          },
-        ),
-      );
-  }
-
-  void _updateCodeContent() {
-    _controller.runJavaScript(
-        "updateCodeContent('${code?.replaceAll("'", "\\'")}');"
-    );
   }
 
   @override
@@ -56,7 +39,23 @@ class _DartSnippetViewState extends State<DartSnippetView> {
     return SizedBox(
       height: widget.height,
       width: widget.width,
-      child: WebViewWidget(controller: _controller),
+      child: InAppWebView(
+        initialFile: "packages/dart_snippet_view/assets/code_viewer.html",
+        initialSettings: InAppWebViewSettings(javaScriptEnabled: true),
+        onWebViewCreated: (InAppWebViewController controller) {
+          _webViewController = controller;
+        },
+        onLoadStop: (InAppWebViewController controller, Uri? url) {
+          _updateCodeContent();
+        },
+      ),
     );
+  }
+
+  void _updateCodeContent() {
+    if (code != null) {
+      _webViewController.evaluateJavascript(
+          source: "updateCodeContent('${code!.replaceAll("'", "\\'")}');");
+    }
   }
 }
