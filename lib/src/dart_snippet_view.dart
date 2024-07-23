@@ -1,54 +1,62 @@
 import 'package:dart_style/dart_style.dart';
-import 'package:flutter/widgets.dart';
-import 'package:webviewx2/webviewx2.dart';
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 class DartSnippetView extends StatefulWidget {
+  final String code;
   final double height;
   final double width;
-  final String code;
   final bool runFormatter;
+
   const DartSnippetView({
     super.key,
+    required this.code,
     required this.height,
     required this.width,
-    required this.code,
     this.runFormatter = false,
   });
 
   @override
-  State<DartSnippetView> createState() => _DartSnippetViewState();
+  State<StatefulWidget> createState() => _DartSnippetViewState();
 }
 
 class _DartSnippetViewState extends State<DartSnippetView> {
+  late WebViewController _controller;
   String? code;
+
   @override
   void initState() {
+    super.initState();
     if (widget.runFormatter) {
       code = DartFormatter().format(widget.code);
     } else {
       code = widget.code;
     }
-    super.initState();
+
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadFlutterAsset('packages/dart_snippet_view/assets/code_viewer.html')
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (String url) {
+            _updateCodeContent();
+          },
+        ),
+      );
+  }
+
+  void _updateCodeContent() {
+    _controller.runJavaScript(
+        "updateCodeContent('${code?.replaceAll("'", "\\'")}');"
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return WebViewX(
+    return SizedBox(
       height: widget.height,
       width: widget.width,
-      initialSourceType: SourceType.html,
-      onWebViewCreated: (controller) {
-        controller.loadContent(
-          'packages/dart_snippet_view/assets/code_viewer.html',
-          SourceType.html,
-          fromAssets: true,
-        );
-        // Image.asset('name',package: '',);
-
-        Future.delayed(const Duration(seconds: 1), () {
-          controller.callJsMethod('updateCodeContent', [code]);
-        });
-      },
+      child: WebViewWidget(controller: _controller),
     );
   }
 }
