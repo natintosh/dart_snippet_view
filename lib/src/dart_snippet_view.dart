@@ -40,7 +40,7 @@ class _DartSnippetViewState extends State<DartSnippetView> {
       height: widget.height,
       width: widget.width,
       child: InAppWebView(
-        initialFile: "assets/code_viewer.html",
+        initialFile: "packages/dart_snippet_view/assets/code_viewer.html",
         initialSettings: InAppWebViewSettings(javaScriptEnabled: true),
         onWebViewCreated: (InAppWebViewController controller) {
           _webViewController = controller;
